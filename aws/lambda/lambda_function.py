@@ -10,7 +10,7 @@ num_cores = multiprocessing.cpu_count()
 
 def get_regex_for_class_contains(class_):
   escaped_class = re.escape(class_)
-  return '.*\ {}\ .*|.*\ {}$|^{}\ .*|^{}$'.format(escaped_class, escaped_class, escaped_class, escaped_class)
+  return re.compile('.*\ {}\ .*|.*\ {}$|^{}\ .*|^{}$'.format(escaped_class, escaped_class, escaped_class, escaped_class))
 
 def extract_page_count():
   response = requests.get(MAIN_PAGE_BASE + '/medal-of-honor-recipients?sort-type=MostRecent&page-number=1')
@@ -20,7 +20,7 @@ def extract_page_count():
     return 0
 
   soup = BeautifulSoup(response.text, 'html.parser')
-  page_selectors = soup.find('div', class_=re.compile(get_regex_for_class_contains('recipient-grid'))).find_all('a', class_=re.compile(get_regex_for_class_contains('page-selector')))
+  page_selectors = soup.find('div', class_=re.compile(get_regex_for_class_contains('recipient-grid'))).find_all('a', class_=get_regex_for_class_contains('page-selector'))
   return int(page_selectors[-1].get('data-pagenumber'))
 
 def extract_recipients(page_num):
@@ -45,7 +45,7 @@ def _extract_recipient_info(url):
 
   soup = BeautifulSoup(response.text, 'html.parser')
 
-  name = soup.find('body').find('div', class_=re.compile('.*\ title\ .*|.*\ title$|^title\ .*|^title$')).find('h4').string
+  name = soup.find('body').find('div', class_=get_regex_for_class_contains('title')).find('h4').string
   name_match = re.compile('(.+)\,\ (.+)').match(name)
   if name_match == None:
     formatted_name = name
@@ -56,10 +56,14 @@ def _extract_recipient_info(url):
 
   year_of_honor = soup.find_all('table')[1].find_all('tr')[1].find_all('td')[1].string
 
+  img = soup.find('div', id='the-top').find('div', class_=get_regex_for_class_contains('callout-img')).find('img')
+  img = MAIN_PAGE_BASE + img.get('src')
+
   data = {
     'name': formatted_name,
     'citation': citation,
-    'year_of_honor': year_of_honor
+    'year_of_honor': year_of_honor,
+    'img': img
   }
   return data
 
@@ -68,12 +72,24 @@ def extract_recipient_info(urls):
 
 def lambda_handler(event, context):
   page_count = extract_page_count()
-  recipient_links = Parallel(n_jobs=num_cores)(delayed(extract_recipients)(i) for i in range(1, page_count + 1))
+  # recipient_links = Parallel(n_jobs=num_cores)(delayed(extract_recipients)(i) for i in range(1, page_count + 1))
+  recipient_links = Parallel(n_jobs=num_cores)(delayed(extract_recipients)(i) for i in range(1, 2))
   recipient_info = []
   # recipient_info.extend(Parallel(n_jobs=num_cores)(delayed(extract_recipient_info)(recipient_links[i]) for i in range(1, page_count + 1)))
   for urls in recipient_links:
     recipient_info.extend(extract_recipient_info(urls))
   print recipient_info[-1]
+
+  # todo: persist recipient_info in DB
+  # todo: add alexa request processing stuff
+  #       - What is the Medal of Honor?
+  #         - The Medal of Honor is the United States of America's highest and most prestigious personal military decoration that may be awarded to recognize U.S. military service members who have distinguished themselves by acts of valor. The medal is normally awarded by the President of the United States in the name of the U.S. Congress.
+  #       - Who is the latest recipient?
+  #         - Who is the latest recipient of the Medal of Honor?
+  #       - Have any women been awarded the Medal of Honor?
+  #         - Have any women ever been awarded the Medal of Honor?
+  #         - Have any women been awarded?
+  #         - Have any women ever been awarded?
 
   return {
     "statusCode": 200,
