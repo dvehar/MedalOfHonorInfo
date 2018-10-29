@@ -7,7 +7,6 @@ from queue import Queue
 import sys
 import boto3
 from bs4 import BeautifulSoup
-from joblib import Parallel, delayed
 
 MAIN_PAGE_BASE = 'https://themedalofhonor.com'
 num_cores = multiprocessing.cpu_count()
@@ -99,48 +98,41 @@ class Worker(Thread):
         self.queue.task_done()
 
 def lambda_handler(event, context):
+  # get number of pages
   page_count = extract_page_count()
-  # recipient_links = Parallel(n_jobs=num_cores)(delayed(extract_recipients)(i) for i in range(1, page_count + 1))
+
+  # get links for the recipients on each page
   recipient_links = Queue()
-  queue = Queue()
+  input_queue = Queue()
   for _ in range(1, num_cores):
-    worker = Worker(queue, recipient_links, extract_recipients)
+    worker = Worker(input_queue, recipient_links, extract_recipients)
     # Setting daemon to True will let the main thread exit even though the workers are blocking
     worker.daemon = True
     worker.start()
+  # for i in range(1, page_count + 1):
   for i in range(1, 4):
-    queue.put(i)
-  queue.join()
+    input_queue.put(i)
+  input_queue.join()
 
-  # Parallel(n_jobs=num_cores)(delayed(extract_recipients)(i) for i in range(1, 4))
-  # recipient_info = []
-  # for urls in recipient_links:
-  #   recipient_info.extend(extract_recipient_info(urls))
-  # print recipient_info[-1]
-  #
-  # r = [item for sublist in recipient_links for item in sublist]
-  # recipient_info = Parallel(n_jobs=2, verbose=100)(delayed(extract_recipient_info)(r, i) for i in range(1,4))
-
+  # parse the from each recipient's page
   recipient_data = Queue()
-  # Create a queue to communicate with the worker threads
-  queue = Queue()
+  input_queue = Queue()
   for _ in range(num_cores):
-    worker = Worker(queue, recipient_data, _extract_recipient_info)
+    worker = Worker(input_queue, recipient_data, _extract_recipient_info)
     # Setting daemon to True will let the main thread exit even though the workers are blocking
     worker.daemon = True
     worker.start()
-  for recipient_link in [item for sublist in recipient_links for item in sublist]:
-    queue.put(recipient_link)
-  queue.join()
-  while not recipient_data.empty():
-    r = recipient_data.get()
-    if (recipient_data.empty()):
-      print r
+  for recipient_link in [item for sublist in recipient_links.queue for item in sublist]:
+    input_queue.put(recipient_link)
+  input_queue.join()
 
-  # client = boto3.client('dynamodb')
-  # response = client.put_item(TableName='MedalOfHonorInfo', Item=dict_to_dynamodb_dict(recipient_info[-1]))
+  # insert the data into dynamodb
+  client = boto3.client('dynamodb')
+  # while not recipient_data.empty():
+  #   data = recipient_data.get()
+  #   response = client.put_item(TableName='MedalOfHonorInfo', Item=dict_to_dynamodb_dict(data[-1]))
+  response = client.put_item(TableName='MedalOfHonorInfo', Item=dict_to_dynamodb_dict(recipient_data.get()))
 
-  # todo: persist recipient_info in DB
   # todo: add alexa request processing stuff
   #       - What is the Medal of Honor?
   #         - The Medal of Honor is the United States of America's highest and most prestigious personal military decoration that may be awarded to recognize U.S. military service members who have distinguished themselves by acts of valor. The medal is normally awarded by the President of the United States in the name of the U.S. Congress.
