@@ -4,7 +4,6 @@ import re
 import multiprocessing
 from threading import Thread
 from queue import Queue
-import sys
 import boto3
 from bs4 import BeautifulSoup
 
