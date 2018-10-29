@@ -2,6 +2,9 @@ import json
 import requests
 import re
 import multiprocessing
+from threading import Thread
+from queue import Queue
+import sys
 import boto3
 from bs4 import BeautifulSoup
 from joblib import Parallel, delayed
@@ -68,30 +71,63 @@ def _extract_recipient_info(url):
   }
   return data
 
-def extract_recipient_info(urls):
-  return map(_extract_recipient_info, urls)
+def extract_recipient_info(urls, i):
+  return _extract_recipient_info(urls[i])
+
+def dict_to_dynamodb_dict(raw_dict):
+  formatted_dict = {}
+  for key in raw_dict.keys():
+    val = raw_dict[key]
+    type = 'N' if isinstance(val, (int, long)) else 'S'
+    formatted_dict[key] = { type: val }
+  return formatted_dict
+
+class Worker(Thread):
+  def __init__(self, queue, results, fn):
+    Thread.__init__(self)
+    self.queue = queue
+    self.results = results
+    self.fn = fn
+
+  def run(self):
+    while True:
+      # Get the work from the queue and expand the tuple
+      arg = self.queue.get()
+      try:
+        self.results.put(self.fn(arg))
+      finally:
+        self.queue.task_done()
 
 def lambda_handler(event, context):
   page_count = extract_page_count()
   # recipient_links = Parallel(n_jobs=num_cores)(delayed(extract_recipients)(i) for i in range(1, page_count + 1))
-  recipient_links = Parallel(n_jobs=num_cores)(delayed(extract_recipients)(i) for i in range(1, 2))
-  recipient_info = []
-  # recipient_info.extend(Parallel(n_jobs=num_cores)(delayed(extract_recipient_info)(recipient_links[i]) for i in range(1, page_count + 1)))
-  for urls in recipient_links:
-    recipient_info.extend(extract_recipient_info(urls))
-  print recipient_info[-1]
+  recipient_links = Parallel(n_jobs=num_cores)(delayed(extract_recipients)(i) for i in range(1, 4))
+  # recipient_info = []
+  # for urls in recipient_links:
+  #   recipient_info.extend(extract_recipient_info(urls))
+  # print recipient_info[-1]
+  #
+  # r = [item for sublist in recipient_links for item in sublist]
+  # recipient_info = Parallel(n_jobs=2, verbose=100)(delayed(extract_recipient_info)(r, i) for i in range(1,4))
 
-  # todo: determine region from context
-  client = boto3.client('dynamodb')
-  # dynamodb = boto3.resource('dynamodb', region_name='us-east-1', endpoint_url="http://localhost:8000")
-  # table = dynamodb.Table('MedalOfHonorInfo')
-  response = client.put_item(TableName='MedalOfHonorInfo',
-    Item={
-      'name': {'S': 'Desmond Vehar'},
-      'year_of_honor': {'S': '2012'}
-    }
-  )
-  # response = table.put_item(Item=recipient_info[-1])
+  results = Queue()
+  # Create a queue to communicate with the worker threads
+  queue = Queue()
+  for _ in range(num_cores):
+    worker = Worker(queue, results, _extract_recipient_info)
+    # Setting daemon to True will let the main thread exit even though the workers are blocking
+    worker.daemon = True
+    worker.start()
+  for recipient_link in [item for sublist in recipient_links for item in sublist]:
+    queue.put(recipient_link)
+  queue.join()
+  while not results.empty():
+    r = results.get()
+    if (results.empty()):
+      print r
+
+  # client = boto3.client('dynamodb')
+  # response = client.put_item(TableName='MedalOfHonorInfo', Item=dict_to_dynamodb_dict(recipient_info[-1]))
 
   # todo: persist recipient_info in DB
   # todo: add alexa request processing stuff
