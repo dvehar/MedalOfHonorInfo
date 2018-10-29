@@ -101,7 +101,18 @@ class Worker(Thread):
 def lambda_handler(event, context):
   page_count = extract_page_count()
   # recipient_links = Parallel(n_jobs=num_cores)(delayed(extract_recipients)(i) for i in range(1, page_count + 1))
-  recipient_links = Parallel(n_jobs=num_cores)(delayed(extract_recipients)(i) for i in range(1, 4))
+  recipient_links = Queue()
+  queue = Queue()
+  for _ in range(1, num_cores):
+    worker = Worker(queue, recipient_links, extract_recipients)
+    # Setting daemon to True will let the main thread exit even though the workers are blocking
+    worker.daemon = True
+    worker.start()
+  for i in range(1, 4):
+    queue.put(i)
+  queue.join()
+
+  # Parallel(n_jobs=num_cores)(delayed(extract_recipients)(i) for i in range(1, 4))
   # recipient_info = []
   # for urls in recipient_links:
   #   recipient_info.extend(extract_recipient_info(urls))
@@ -110,20 +121,20 @@ def lambda_handler(event, context):
   # r = [item for sublist in recipient_links for item in sublist]
   # recipient_info = Parallel(n_jobs=2, verbose=100)(delayed(extract_recipient_info)(r, i) for i in range(1,4))
 
-  results = Queue()
+  recipient_data = Queue()
   # Create a queue to communicate with the worker threads
   queue = Queue()
   for _ in range(num_cores):
-    worker = Worker(queue, results, _extract_recipient_info)
+    worker = Worker(queue, recipient_data, _extract_recipient_info)
     # Setting daemon to True will let the main thread exit even though the workers are blocking
     worker.daemon = True
     worker.start()
   for recipient_link in [item for sublist in recipient_links for item in sublist]:
     queue.put(recipient_link)
   queue.join()
-  while not results.empty():
-    r = results.get()
-    if (results.empty()):
+  while not recipient_data.empty():
+    r = recipient_data.get()
+    if (recipient_data.empty()):
       print r
 
   # client = boto3.client('dynamodb')
