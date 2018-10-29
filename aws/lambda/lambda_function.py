@@ -2,6 +2,7 @@ import json
 import requests
 import re
 import multiprocessing
+import boto3
 from bs4 import BeautifulSoup
 from joblib import Parallel, delayed
 
@@ -79,6 +80,18 @@ def lambda_handler(event, context):
   for urls in recipient_links:
     recipient_info.extend(extract_recipient_info(urls))
   print recipient_info[-1]
+
+  # todo: determine region from context
+  client = boto3.client('dynamodb')
+  # dynamodb = boto3.resource('dynamodb', region_name='us-east-1', endpoint_url="http://localhost:8000")
+  # table = dynamodb.Table('MedalOfHonorInfo')
+  response = client.put_item(TableName='MedalOfHonorInfo',
+    Item={
+      'name': {'S': 'Desmond Vehar'},
+      'year_of_honor': {'S': '2012'}
+    }
+  )
+  # response = table.put_item(Item=recipient_info[-1])
 
   # todo: persist recipient_info in DB
   # todo: add alexa request processing stuff
