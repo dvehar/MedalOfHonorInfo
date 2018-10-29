@@ -3,7 +3,7 @@ import requests
 import re
 import multiprocessing
 from threading import Thread
-from queue import Queue
+from Queue import Queue
 import boto3
 from bs4 import BeautifulSoup
 
@@ -26,26 +26,36 @@ def extract_page_count():
   return int(page_selectors[-1].get('data-pagenumber'))
 
 def extract_recipients(page_num):
+  log_base = 'extract_recipients[{}] '.format(page_num)
+  print log_base
   response = requests.get(MAIN_PAGE_BASE + '/medal-of-honor-recipients?sort-type=MostRecent&page-number=' + str(page_num))
   status_code = response.status_code
   if status_code != 200:
     print status_code
     return []
 
+  print log_base + 'fetched page with 200'
   soup = BeautifulSoup(response.text, 'html.parser')
+  print log_base + 'parsed page'
   links = soup.find_all('a', href=re.compile('^\/medal\-of\-honor\-recipients\/recipients\/.+'))
+  print log_base + 'found links'
   abs_links = map(lambda link: MAIN_PAGE_BASE + link.get('href'), links)
+  print log_base + 'transformed links'
   return abs_links
 
-def _extract_recipient_info(url):
-  print url
+def extract_recipient_info(url):
+  log_base = 'extract_recipient_info[{}] '.format(url)
+  print log_base
+
   response = requests.get(url)
   status_code = response.status_code
   if status_code != 200:
     print status_code
     return {}
 
+  print log_base + 'fetched page with 200'
   soup = BeautifulSoup(response.text, 'html.parser')
+  print log_base + 'parsed page'
 
   name = soup.find('body').find('div', class_=get_regex_for_class_contains('title')).find('h4').string
   name_match = re.compile('(.+)\,\ (.+)').match(name)
@@ -68,9 +78,6 @@ def _extract_recipient_info(url):
     'img': img
   }
   return data
-
-def extract_recipient_info(urls, i):
-  return _extract_recipient_info(urls[i])
 
 def dict_to_dynamodb_dict(raw_dict):
   formatted_dict = {}
@@ -99,38 +106,39 @@ class Worker(Thread):
 def lambda_handler(event, context):
   # get number of pages
   page_count = extract_page_count()
+  print 'found ' + str(page_count) + ' pages'
 
   # get links for the recipients on each page
   recipient_links = Queue()
   input_queue = Queue()
+  for i in range(1, page_count + 1):
+  # for i in range(1, 3):
+    input_queue.put(i)
   for _ in range(1, num_cores):
     worker = Worker(input_queue, recipient_links, extract_recipients)
-    # Setting daemon to True will let the main thread exit even though the workers are blocking
     worker.daemon = True
     worker.start()
-  # for i in range(1, page_count + 1):
-  for i in range(1, 4):
-    input_queue.put(i)
   input_queue.join()
+  print 'finished recipients'
 
   # parse the from each recipient's page
   recipient_data = Queue()
   input_queue = Queue()
-  for _ in range(num_cores):
-    worker = Worker(input_queue, recipient_data, _extract_recipient_info)
-    # Setting daemon to True will let the main thread exit even though the workers are blocking
-    worker.daemon = True
-    worker.start()
   for recipient_link in [item for sublist in recipient_links.queue for item in sublist]:
     input_queue.put(recipient_link)
+  for _ in range(num_cores):
+    worker = Worker(input_queue, recipient_data, extract_recipient_info)
+    worker.daemon = True
+    worker.start()
   input_queue.join()
+  print 'finished recipient data'
 
   # insert the data into dynamodb
   client = boto3.client('dynamodb')
-  # while not recipient_data.empty():
-  #   data = recipient_data.get()
-  #   response = client.put_item(TableName='MedalOfHonorInfo', Item=dict_to_dynamodb_dict(data[-1]))
-  response = client.put_item(TableName='MedalOfHonorInfo', Item=dict_to_dynamodb_dict(recipient_data.get()))
+  while not recipient_data.empty():
+    data = recipient_data.get()
+    response = client.put_item(TableName='MedalOfHonorInfo', Item=dict_to_dynamodb_dict(data))
+  print 'done inserting data into dynamodb'
 
   # todo: add alexa request processing stuff
   #       - What is the Medal of Honor?
