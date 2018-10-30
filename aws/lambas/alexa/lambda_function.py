@@ -98,9 +98,9 @@ class FallbackIntentHandler(AbstractRequestHandler):
   def handle(self, handler_input):
     # type: (HandlerInput) -> Response
     speech_text = (
-      "The Hello World skill can't help you with that.  "
-      "You can say hello!!")
-    reprompt = "You can say hello!!"
+      'Sorry I can\'t help you with that.  '
+      'Try saying "Alexa, ask Medal of Honor Info a random recipient"')
+    reprompt = 'Try saying "Alexa, ask Medal of Honor Info a random recipient"'
     handler_input.response_builder.speak(speech_text).ask(reprompt)
     return handler_input.response_builder.response
 
