@@ -1,0 +1,597 @@
+{
+  "interactionModel": {
+    "languageModel": {
+      "invocationName": "medal of honor info",
+      "intents": [
+        {
+          "name": "AMAZON.FallbackIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.CancelIntent",
+          "samples": [
+            "end",
+            "done",
+            "leave",
+            "quit",
+            "stop",
+            "cancel"
+          ]
+        },
+        {
+          "name": "AMAZON.HelpIntent",
+          "samples": [
+            "what is the award",
+            "what is the Medal of Honor",
+            "help"
+          ]
+        },
+        {
+          "name": "AMAZON.StopIntent",
+          "samples": [
+            "end",
+            "done",
+            "leave",
+            "quit",
+            "stop",
+            "cancel"
+          ]
+        },
+        {
+          "name": "AMAZON.NavigateHomeIntent",
+          "samples": [
+            "end",
+            "done",
+            "leave",
+            "quit",
+            "stop",
+            "cancel"
+          ]
+        },
+        {
+          "name": "AMAZON.RepeatIntent",
+          "samples": [
+            "say that again slower",
+            "repeat that",
+            "say that again"
+          ]
+        },
+        {
+          "name": "LatestRecipient",
+          "slots": [],
+          "samples": [
+            "who is the latest recipient of the Medal of Honor",
+            "who was awarded the Medal of Honor most recently",
+            "who was awarded the Medal of Honor last",
+            "who was the last soldier to be awarded the Medal of Honor",
+            "who was the last person to be awarded the Medal of Honor",
+            "who was awarded last",
+            "who is the latest recipient"
+          ]
+        },
+        {
+          "name": "WomenAwarded",
+          "slots": [],
+          "samples": [
+            "have any women ever been awarded the Medal of Honor",
+            "have any women been awarded the Medal of Honor",
+            "have any women ever been awarded",
+            "have any women been awarded"
+          ]
+        },
+        {
+          "name": "WhatIsIt",
+          "slots": [],
+          "samples": [
+            "Who awards the Medal Of Honor",
+            "Who gives out the Medal Of Honor",
+            "Why is someone awarded the Medal of Honor",
+            "Why is a solider awarded the Medal of Honor",
+            "Who is awarded the Medal of Honor",
+            "Who is awarded it",
+            "What is it",
+            "What is the Medal of Honor"
+          ]
+        },
+        {
+          "name": "RecipientIntent",
+          "slots": [
+            {
+              "name": "recipient",
+              "type": "AMAZON.Person"
+            }
+          ],
+          "samples": [
+            "what is {recipient}  citation",
+            "about {recipient}",
+            "Why did {recipient} recieve the award",
+            "Why did {recipient} recieve the Medal",
+            "Why did {recipient} recieve the Medal of Honor"
+          ]
+        },
+        {
+          "name": "RandomRecipient",
+          "slots": [],
+          "samples": [
+            "random awardee",
+            "random award",
+            "random recipient",
+            "a random recipient"
+          ]
+        },
+        {
+          "name": "RandomWarRecipient",
+          "slots": [
+            {
+              "name": "war",
+              "type": "AMAZON.EventType",
+              "samples": [
+                "Indian Wars",
+                "The War To End All War",
+                "The War To End All Wars",
+                "World War One",
+                "World War Two",
+                "Korea",
+                "Korean War",
+                "The Korean War",
+                "Vietnam",
+                "Vietnam War",
+                "The Vietnam War"
+              ]
+            }
+          ],
+          "samples": [
+            "about a random recipient from {war}",
+            "about a random awardee from {war}",
+            "about a recipient from {war}",
+            "about a awardee from {war}"
+          ]
+        }
+      ],
+      "types": [
+        {
+          "name": "AMAZON.Person",
+          "values": [
+            {
+              "name": {
+                "value": "ALEXANDER LYLE"
+              }
+            },
+            {
+              "name": {
+                "value": "ALLAN KELLOGG JR."
+              }
+            },
+            {
+              "name": {
+                "value": "ALONZO BOWMAN"
+              }
+            },
+            {
+              "name": {
+                "value": "ALONZO CUSHING"
+              }
+            },
+            {
+              "name": {
+                "value": "ANTHONY DAMATO"
+              }
+            },
+            {
+              "name": {
+                "value": "ARDIE COPAS"
+              }
+            },
+            {
+              "name": {
+                "value": "BENNIE ADKINS"
+              }
+            },
+            {
+              "name": {
+                "value": "BILLIE KANELL"
+              }
+            },
+            {
+              "name": {
+                "value": "BRITT SLABINSKI"
+              }
+            },
+            {
+              "name": {
+                "value": "CANDELARIO GARCIA"
+              }
+            },
+            {
+              "name": {
+                "value": "CHARLES GEORGE"
+              }
+            },
+            {
+              "name": {
+                "value": "CHARLES ROBERTS"
+              }
+            },
+            {
+              "name": {
+                "value": "CHARLES SANCRAINTE"
+              }
+            },
+            {
+              "name": {
+                "value": "CHARLES WATTERS"
+              }
+            },
+            {
+              "name": {
+                "value": "CLINTON ROMESHA"
+              }
+            },
+            {
+              "name": {
+                "value": "Charles Kettles"
+              }
+            },
+            {
+              "name": {
+                "value": "DAKOTA MEYER"
+              }
+            },
+            {
+              "name": {
+                "value": "DALE WAYRYNEN"
+              }
+            },
+            {
+              "name": {
+                "value": "DENIS BUCKLEY"
+              }
+            },
+            {
+              "name": {
+                "value": "DESMOND DOSS"
+              }
+            },
+            {
+              "name": {
+                "value": "DIMENSIO RIVERA"
+              }
+            },
+            {
+              "name": {
+                "value": "DONALD SLOAT"
+              }
+            },
+            {
+              "name": {
+                "value": "DOUGLAS HAPEMAN"
+              }
+            },
+            {
+              "name": {
+                "value": "EDUARDO GOMEZ"
+              }
+            },
+            {
+              "name": {
+                "value": "EDWARD DODDS"
+              }
+            },
+            {
+              "name": {
+                "value": "EDWARD GOMEZ"
+              }
+            },
+            {
+              "name": {
+                "value": "EDWARD SILK"
+              }
+            },
+            {
+              "name": {
+                "value": "EDWIN TRUELL"
+              }
+            },
+            {
+              "name": {
+                "value": "ERIC GIBSON"
+              }
+            },
+            {
+              "name": {
+                "value": "Edward Byers. Jr."
+              }
+            },
+            {
+              "name": {
+                "value": "FELIX CONDE-FALCON"
+              }
+            },
+            {
+              "name": {
+                "value": "FRANK BALDWIN"
+              }
+            },
+            {
+              "name": {
+                "value": "FRANK WALKER"
+              }
+            },
+            {
+              "name": {
+                "value": "FRANKLIN SIGLER"
+              }
+            },
+            {
+              "name": {
+                "value": "FREDERICK MAUSERT III"
+              }
+            },
+            {
+              "name": {
+                "value": "GARY ROSE"
+              }
+            },
+            {
+              "name": {
+                "value": "GEORGE CHARETTE"
+              }
+            },
+            {
+              "name": {
+                "value": "Garlin Conner"
+              }
+            },
+            {
+              "name": {
+                "value": "HECTOR CAFFERATA JR."
+              }
+            },
+            {
+              "name": {
+                "value": "JACK WEINSTEIN"
+              }
+            },
+            {
+              "name": {
+                "value": "JAMES CHURCH"
+              }
+            },
+            {
+              "name": {
+                "value": "JESUS DURAN"
+              }
+            },
+            {
+              "name": {
+                "value": "JOE BALDONADO"
+              }
+            },
+            {
+              "name": {
+                "value": "JOHN BACA"
+              }
+            },
+            {
+              "name": {
+                "value": "JOHN LATHAM"
+              }
+            },
+            {
+              "name": {
+                "value": "JOHN MAGRATH"
+              }
+            },
+            {
+              "name": {
+                "value": "JOHN SHANES"
+              }
+            },
+            {
+              "name": {
+                "value": "JOHN VILLEPIGUE"
+              }
+            },
+            {
+              "name": {
+                "value": "JOSE RODELA"
+              }
+            },
+            {
+              "name": {
+                "value": "JUAN NEGRON"
+              }
+            },
+            {
+              "name": {
+                "value": "James McCloughan"
+              }
+            },
+            {
+              "name": {
+                "value": "John Canley"
+              }
+            },
+            {
+              "name": {
+                "value": "John Chapman"
+              }
+            },
+            {
+              "name": {
+                "value": "LEONARD ALVARADO"
+              }
+            },
+            {
+              "name": {
+                "value": "LEONARD KRAVITZ"
+              }
+            },
+            {
+              "name": {
+                "value": "LEROY PETRY"
+              }
+            },
+            {
+              "name": {
+                "value": "LESLIE SABO, Jr."
+              }
+            },
+            {
+              "name": {
+                "value": "LOREN KAUFMAN"
+              }
+            },
+            {
+              "name": {
+                "value": "MELVIN MORRIS"
+              }
+            },
+            {
+              "name": {
+                "value": "MICHAEL NOVOSEL"
+              }
+            },
+            {
+              "name": {
+                "value": "MIGUEL VERA"
+              }
+            },
+            {
+              "name": {
+                "value": "MIKE PENA"
+              }
+            },
+            {
+              "name": {
+                "value": "MORRIS CRAIN"
+              }
+            },
+            {
+              "name": {
+                "value": "PAUL STRAUB"
+              }
+            },
+            {
+              "name": {
+                "value": "PEDRO CANO"
+              }
+            },
+            {
+              "name": {
+                "value": "RAYMOND BEAUDOIN"
+              }
+            },
+            {
+              "name": {
+                "value": "RICHARD HEARTERY"
+              }
+            },
+            {
+              "name": {
+                "value": "ROBERT HENRY"
+              }
+            },
+            {
+              "name": {
+                "value": "ROBERT PATTERSON"
+              }
+            },
+            {
+              "name": {
+                "value": "ROBERT SWEENEY"
+              }
+            },
+            {
+              "name": {
+                "value": "Ronald Shurer II"
+              }
+            },
+            {
+              "name": {
+                "value": "SALVATORE GIUNTA"
+              }
+            },
+            {
+              "name": {
+                "value": "SANTIAGO EREVIA"
+              }
+            },
+            {
+              "name": {
+                "value": "SYDNEY GUMPERTZ"
+              }
+            },
+            {
+              "name": {
+                "value": "SYLVESTER ANTOLAK"
+              }
+            },
+            {
+              "name": {
+                "value": "TONY BURRIS"
+              }
+            },
+            {
+              "name": {
+                "value": "VICTOR ESPINOZA"
+              }
+            },
+            {
+              "name": {
+                "value": "WALTER EHLERS"
+              }
+            },
+            {
+              "name": {
+                "value": "WILLIAM CROSIER"
+              }
+            },
+            {
+              "name": {
+                "value": "WILLIAM WILLIAMS"
+              }
+            },
+            {
+              "name": {
+                "value": "WILLY JAMES JR."
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "dialog": {
+      "intents": [
+        {
+          "name": "RandomWarRecipient",
+          "confirmationRequired": false,
+          "prompts": {},
+          "slots": [
+            {
+              "name": "war",
+              "type": "AMAZON.EventType",
+              "confirmationRequired": false,
+              "elicitationRequired": true,
+              "prompts": {
+                "elicitation": "Elicit.Slot.293190951631.1468497753789"
+              }
+            }
+          ]
+        }
+      ],
+      "delegationStrategy": "ALWAYS"
+    },
+    "prompts": [
+      {
+        "id": "Elicit.Slot.293190951631.1468497753789",
+        "variations": [
+          {
+            "type": "PlainText",
+            "value": "What war are you asking about"
+          }
+        ]
+      }
+    ]
+  }
+}
