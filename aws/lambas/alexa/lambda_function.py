@@ -147,7 +147,6 @@ class WhatIsItIntentHandler(AbstractRequestHandler):
     handler_input.response_builder\
       .speak(speech_text)\
       .set_card(
-        # SimpleCard('Medal of Honor Info', speech_text)) \
         StandardCard('Medal of Honor Info', speech_text, img))\
           .set_should_end_session(False)
     return handler_input.response_builder.response
