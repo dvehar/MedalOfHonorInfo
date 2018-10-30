@@ -42,6 +42,25 @@ class LaunchRequestHandler(AbstractRequestHandler):
     return handler_input.response_builder.response
 
 
+class RepeatIntentHandler(AbstractRequestHandler):
+  """Handler for Repeat Intent."""
+  def can_handle(self, handler_input):
+    # type: (HandlerInput) -> bool
+    return is_request_type("RepeatIntent")(handler_input)
+
+  def handle(self, handler_input):
+    # type: (HandlerInput) -> Response
+    #TODO: https://developer.amazon.com/blogs/alexa/post/2279543b-ed7b-48b4-a3aa-d273f7aab609/alexa-skill-recipe-using-session-attributes-to-enable-repeat-responses
+    speech_text = 'This skill can give you more information about the Medal of Honor and its recipients. Try saying "Alexa, ask Medal of Honor Info what is the Medal of Honor?"'
+
+    handler_input.response_builder \
+      .speak(speech_text) \
+      .set_card(
+      SimpleCard("Medal of Honor Info", speech_text)) \
+      .set_should_end_session(False)
+    return handler_input.response_builder.response
+
+
 class RecipientIntentHandler(AbstractRequestHandler):
   """Handler for Recipient Intent."""
   def can_handle(self, handler_input):
@@ -159,6 +178,7 @@ class CatchAllExceptionHandler(AbstractExceptionHandler):
 
 
 sb.add_request_handler(LaunchRequestHandler())
+sb.add_request_handler(RepeatIntentHandler())
 sb.add_request_handler(RecipientIntentHandler())
 sb.add_request_handler(HelpIntentHandler())
 sb.add_request_handler(CancelOrStopIntentHandler())
