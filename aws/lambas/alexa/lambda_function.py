@@ -1,5 +1,6 @@
 import logging
 import datetime
+import random
 
 import boto3
 from boto3.dynamodb.conditions import Key
@@ -18,12 +19,6 @@ sb = SkillBuilder()
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-
-MEDAL_OF_HONOR_INFO = \
-'The Medal of Honor is the United States of America\'s highest and most prestigious personal \
-military decoration that may be awarded to recognize U.S. military service members who have \
-distinguished themselves by acts of valor. The medal is normally awarded by the President of \
-the United States in the name of the U.S. Congress.'
 
 class LaunchRequestHandler(AbstractRequestHandler):
   """Handler for Skill Launch."""
@@ -44,7 +39,7 @@ class LaunchRequestHandler(AbstractRequestHandler):
 
 
 class RepeatIntentHandler(AbstractRequestHandler):
-  """Handler for Repeat Intent."""
+  """Handler for Repeat Intent"""
   def can_handle(self, handler_input):
     # type: (HandlerInput) -> bool
     return is_request_type("RepeatIntent")(handler_input)
@@ -97,8 +92,68 @@ class LatestRecipientIntentHandler(AbstractRequestHandler):
 
     return handler_input.response_builder.response
 
+
+class WomenAwardedIntentHandler(AbstractRequestHandler):
+  """Handler for Women Awarded Intent"""
+  def can_handle(self, handler_input):
+    # type: (HandlerInput) -> bool
+    return is_intent_name("WomenAwarded")(handler_input)
+
+  def handle(self, handler_input):
+    # type: (HandlerInput) -> Response
+
+    # todo: need to think more about how to do this
+
+    # fetch data into dynamodb
+    logger.info('searching for latest recipent in dynamodb')
+    table = boto3.resource('dynamodb').Table('MedalOfHonorInfo')
+    min_year = str(datetime.datetime.now().year - 5) # assume that the award will be given out at least every 5 years
+    # TODO response = table.scan(FilterExpression=Key('year_of_honor').gt(min_year))
+    response = table.scan(FilterExpression=Key('year_of_honor').gt('1969'))
+    print 'response={}'.format(response)
+
+    # find recorded with greatest year_of_honor. there isn't much we can do about tie-breaking
+    newest = max(response['Items'], key=lambda val: val['year_of_honor'])
+    print 'newest={}'.format(newest)
+
+    citation = response['Items'][0]['citation']
+    # year_of_honor = response['Items'][0]['year_of_honor']
+    img = response['Items'][0]['img']
+    name = response['Items'][0]['name']
+    speech_text = citation
+    handler_input.response_builder \
+      .speak(speech_text) \
+      .set_card(
+      # TODO StandardCard(name, speech_text, img))\
+      SimpleCard(name, speech_text)) \
+      .set_should_end_session(False)
+
+    return handler_input.response_builder.response
+
+class WhatIsItIntentHandler(AbstractRequestHandler):
+  """Handler for What Is It Intent"""
+  def can_handle(self, handler_input):
+    # type: (HandlerInput) -> bool
+    return is_intent_name("WhatIsIt")(handler_input)
+
+  def handle(self, handler_input):
+    # type: (HandlerInput) -> Response
+    speech_text = 'The Medal of Honor is the United States of America\'s highest and most prestigious personal '\
+                  'military decoration that may be awarded to recognize U.S. military service members who have '\
+                  'distinguished themselves by acts of valor. The medal is normally awarded by the President of the '\
+                  'United States in the name of the U.S. Congress. Try saying "Alexa, ask Medal of Honor Info who is '\
+                  'the latest recipient?"'
+    img = 'https://s3.amazonaws.com/medalofhonorinfo/moh{}.jpg'.format(random.choice(range(1, 11)))
+    handler_input.response_builder\
+      .speak(speech_text)\
+      .set_card(
+        # SimpleCard('Medal of Honor Info', speech_text)) \
+        StandardCard('Medal of Honor Info', speech_text, img))\
+          .set_should_end_session(False)
+    return handler_input.response_builder.response
+
 class RecipientIntentHandler(AbstractRequestHandler):
-  """Handler for Recipient Intent."""
+  """Handler for Recipient Intent"""
   def can_handle(self, handler_input):
     # type: (HandlerInput) -> bool
     return is_intent_name("RecipientIntent")(handler_input)
@@ -135,7 +190,7 @@ class RecipientIntentHandler(AbstractRequestHandler):
     return handler_input.response_builder.response
 
 class HelpIntentHandler(AbstractRequestHandler):
-  """Handler for Help Intent."""
+  """Handler for Help Intent"""
   def can_handle(self, handler_input):
     # type: (HandlerInput) -> bool
     return is_intent_name("AMAZON.HelpIntent")(handler_input)
@@ -151,7 +206,7 @@ class HelpIntentHandler(AbstractRequestHandler):
 
 
 class CancelOrStopIntentHandler(AbstractRequestHandler):
-  """Single handler for Cancel and Stop Intent."""
+  """Single handler for Cancel and Stop Intent"""
   def can_handle(self, handler_input):
     # type: (HandlerInput) -> bool
     return (is_intent_name("AMAZON.CancelIntent")(handler_input) or
@@ -216,6 +271,8 @@ class CatchAllExceptionHandler(AbstractExceptionHandler):
 sb.add_request_handler(LaunchRequestHandler())
 sb.add_request_handler(RepeatIntentHandler())
 sb.add_request_handler(LatestRecipientIntentHandler())
+sb.add_request_handler(WomenAwardedIntentHandler())
+sb.add_request_handler(WhatIsItIntentHandler())
 sb.add_request_handler(RecipientIntentHandler())
 sb.add_request_handler(HelpIntentHandler())
 sb.add_request_handler(CancelOrStopIntentHandler())
