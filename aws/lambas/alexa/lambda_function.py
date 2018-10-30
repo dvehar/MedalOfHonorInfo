@@ -1,5 +1,8 @@
 import logging
 
+import boto3
+from boto3.dynamodb.conditions import Key
+
 from ask_sdk_core.skill_builder import SkillBuilder
 from ask_sdk_core.dispatch_components import AbstractRequestHandler
 from ask_sdk_core.dispatch_components import AbstractExceptionHandler
@@ -7,6 +10,7 @@ from ask_sdk_core.utils import is_request_type, is_intent_name
 from ask_sdk_core.handler_input import HandlerInput
 
 from ask_sdk_model.ui import SimpleCard
+from ask_sdk_model.ui import StandardCard
 from ask_sdk_model import Response
 
 sb = SkillBuilder()
@@ -28,7 +32,7 @@ class LaunchRequestHandler(AbstractRequestHandler):
 
   def handle(self, handler_input):
     # type: (HandlerInput) -> Response
-    speech_text = 'This skill can give your more info about the Medal of Honor. Try saying "Alexa, ask Medal of Honor Info what is the Medal of Honor?"'
+    speech_text = 'This skill can give you more information about the Medal of Honor. Try saying "Alexa, ask Medal of Honor Info what is the Medal of Honor?"'
 
     handler_input.response_builder\
       .speak(speech_text)\
@@ -38,21 +42,42 @@ class LaunchRequestHandler(AbstractRequestHandler):
     return handler_input.response_builder.response
 
 
-class HelloWorldIntentHandler(AbstractRequestHandler):
-  """Handler for Hello World Intent."""
+class RecipientIntentHandler(AbstractRequestHandler):
+  """Handler for Recipient Intent."""
   def can_handle(self, handler_input):
     # type: (HandlerInput) -> bool
-    return is_intent_name("HelloWorldIntent")(handler_input)
+    return is_intent_name("RecipientIntent")(handler_input)
 
   def handle(self, handler_input):
     # type: (HandlerInput) -> Response
-    speech_text = "Hello Python World from Classes!"
 
-    handler_input.response_builder.speak(speech_text).set_card(
-      SimpleCard("Hello World", speech_text)).set_should_end_session(
-      True)
+    slots = handler_input.request_envelope.request.intent.slots
+    recipient = slots['recipient'].value
+    recipient = recipient.title()
+
+    # fetch data into dynamodb
+    print 'searching for {} in dynamodb'.format(recipient)
+    table = boto3.resource('dynamodb').Table('MedalOfHonorInfo')
+    response = table.query(KeyConditionExpression=Key('name').eq(recipient), Limit=1)
+    print 'response={}'.format(response)
+
+    if len(response['Items']) == 0:
+      speech_text = 'There are no Medal of Honor recipients by the name of {}'.format(recipient)
+      handler_input.response_builder.speak(speech_text)
+    else:
+      citation = response['Items'][0]['citation']
+      # year_of_honor = response['Items'][0]['year_of_honor']
+      img = response['Items'][0]['img']
+      name = response['Items'][0]['name']
+      speech_text = citation
+      handler_input.response_builder\
+        .speak(speech_text)\
+        .set_card(
+          # TODO StandardCard(name, speech_text, img))\
+          SimpleCard(name, speech_text)) \
+        .set_should_end_session(False)
+
     return handler_input.response_builder.response
-
 
 class HelpIntentHandler(AbstractRequestHandler):
   """Handler for Help Intent."""
@@ -99,8 +124,8 @@ class FallbackIntentHandler(AbstractRequestHandler):
     # type: (HandlerInput) -> Response
     speech_text = (
       'Sorry I can\'t help you with that.  '
-      'Try saying "Alexa, ask Medal of Honor Info a random recipient"')
-    reprompt = 'Try saying "Alexa, ask Medal of Honor Info a random recipient"'
+      'Try saying "Alexa, ask Medal of Honor Info about a random recipient"')
+    reprompt = 'Try saying "Alexa, ask Medal of Honor Info about a random recipient"'
     handler_input.response_builder.speak(speech_text).ask(reprompt)
     return handler_input.response_builder.response
 
@@ -135,7 +160,7 @@ class CatchAllExceptionHandler(AbstractExceptionHandler):
 
 
 sb.add_request_handler(LaunchRequestHandler())
-sb.add_request_handler(HelloWorldIntentHandler())
+sb.add_request_handler(RecipientIntentHandler())
 sb.add_request_handler(HelpIntentHandler())
 sb.add_request_handler(CancelOrStopIntentHandler())
 sb.add_request_handler(FallbackIntentHandler())

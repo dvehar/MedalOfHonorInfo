@@ -30,6 +30,7 @@ def extract_recipient_info(url):
     formatted_name = name
   else:
     formatted_name = name_match.group(2) + ' ' + name_match.group(1)
+  formatted_name = formatted_name.title()
 
   citation = soup.find('div', id='citation').find('p').string
 
