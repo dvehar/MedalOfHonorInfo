@@ -106,8 +106,7 @@ class CancelOrStopIntentHandler(AbstractRequestHandler):
     # type: (HandlerInput) -> Response
     speech_text = "Goodbye."
 
-    handler_input.response_builder.speak(speech_text).set_card(
-      SimpleCard("Hello World", speech_text))
+    handler_input.response_builder.speak(speech_text)
     return handler_input.response_builder.response
 
 
