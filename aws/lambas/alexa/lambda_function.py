@@ -32,7 +32,7 @@ class LaunchRequestHandler(AbstractRequestHandler):
 
   def handle(self, handler_input):
     # type: (HandlerInput) -> Response
-    speech_text = 'This skill can give you more information about the Medal of Honor. Try saying "Alexa, ask Medal of Honor Info what is the Medal of Honor?"'
+    speech_text = 'This skill can give you more information about the Medal of Honor and its recipients. Try saying "Alexa, ask Medal of Honor Info what is the Medal of Honor?"'
 
     handler_input.response_builder\
       .speak(speech_text)\
@@ -87,11 +87,11 @@ class HelpIntentHandler(AbstractRequestHandler):
 
   def handle(self, handler_input):
     # type: (HandlerInput) -> Response
-    speech_text = "You can say hello to me!"
+    speech_text = 'This skill can give you more information about the Medal of Honor and its recipients. Try saying "Alexa, ask Medal of Honor Info what is the Medal of Honor?"'
 
     handler_input.response_builder.speak(speech_text).ask(
       speech_text).set_card(SimpleCard(
-      "Hello World", speech_text))
+      "Medal of Honor Info", speech_text))
     return handler_input.response_builder.response
 
 
