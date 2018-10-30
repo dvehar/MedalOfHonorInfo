@@ -1,4 +1,5 @@
 import logging
+import datetime
 
 import boto3
 from boto3.dynamodb.conditions import Key
@@ -53,13 +54,48 @@ class RepeatIntentHandler(AbstractRequestHandler):
     #TODO: https://developer.amazon.com/blogs/alexa/post/2279543b-ed7b-48b4-a3aa-d273f7aab609/alexa-skill-recipe-using-session-attributes-to-enable-repeat-responses
     speech_text = 'This skill can give you more information about the Medal of Honor and its recipients. Try saying "Alexa, ask Medal of Honor Info what is the Medal of Honor?"'
 
-    handler_input.response_builder \
-      .speak(speech_text) \
+    handler_input.response_builder\
+      .speak(speech_text)\
       .set_card(
-      SimpleCard("Medal of Honor Info", speech_text)) \
-      .set_should_end_session(False)
+        SimpleCard("Medal of Honor Info", speech_text))\
+          .set_should_end_session(False)
     return handler_input.response_builder.response
 
+
+class LatestRecipientIntentHandler(AbstractRequestHandler):
+  """Handler for Latest Recipient Intent"""
+  def can_handle(self, handler_input):
+    # type: (HandlerInput) -> bool
+    return is_intent_name("LatestRecipient")(handler_input)
+
+  def handle(self, handler_input):
+    # type: (HandlerInput) -> Response
+
+    # fetch data into dynamodb
+    logger.info('searching for latest recipent in dynamodb')
+    table = boto3.resource('dynamodb').Table('MedalOfHonorInfo')
+    min_year = str(datetime.datetime.now().year - 5) # assume that the award will be given out at least every 5 years
+    # TODO response = table.scan(FilterExpression=Key('year_of_honor').gt(min_year))
+    response = table.scan(FilterExpression=Key('year_of_honor').gt('1969'))
+    print 'response={}'.format(response)
+
+    # find recorded with greatest year_of_honor. there isn't much we can do about tie-breaking
+    newest = max(response['Items'], key=lambda val: val['year_of_honor'])
+    print 'newest={}'.format(newest)
+
+    citation = response['Items'][0]['citation']
+    # year_of_honor = response['Items'][0]['year_of_honor']
+    img = response['Items'][0]['img']
+    name = response['Items'][0]['name']
+    speech_text = citation
+    handler_input.response_builder\
+      .speak(speech_text)\
+      .set_card(
+        # TODO StandardCard(name, speech_text, img))\
+        SimpleCard(name, speech_text))\
+          .set_should_end_session(False)
+
+    return handler_input.response_builder.response
 
 class RecipientIntentHandler(AbstractRequestHandler):
   """Handler for Recipient Intent."""
@@ -179,6 +215,7 @@ class CatchAllExceptionHandler(AbstractExceptionHandler):
 
 sb.add_request_handler(LaunchRequestHandler())
 sb.add_request_handler(RepeatIntentHandler())
+sb.add_request_handler(LatestRecipientIntentHandler())
 sb.add_request_handler(RecipientIntentHandler())
 sb.add_request_handler(HelpIntentHandler())
 sb.add_request_handler(CancelOrStopIntentHandler())
