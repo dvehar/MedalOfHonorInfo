@@ -102,7 +102,7 @@
             }
           ],
           "samples": [
-            "what is {recipient}  citation",
+            "what is {recipient} citation",
             "about {recipient}",
             "Why did {recipient} receive the award",
             "Why did {recipient} receive the Medal",

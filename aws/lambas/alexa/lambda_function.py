@@ -14,6 +14,7 @@ from ask_sdk_core.handler_input import HandlerInput
 
 from ask_sdk_model.ui import SimpleCard
 from ask_sdk_model.ui import StandardCard
+from ask_sdk_model.ui import Image
 from ask_sdk_model import Response
 
 sb = SkillBuilder()
@@ -96,7 +97,7 @@ class LatestRecipientIntentHandler(AbstractRequestHandler):
     # type: (HandlerInput) -> Response
 
     # fetch data into dynamodb
-    logger.info('searching for latest recipent in dynamodb')
+    logger.info('searching for latest recipient in dynamodb')
     table = boto3.resource('dynamodb').Table('MedalOfHonorInfo')
     min_year = str(datetime.now().year - 5) # assume that the award will be given out at least every 5 years
     response = table.scan(FilterExpression=Key('year_of_honor').gt(min_year))
@@ -114,7 +115,7 @@ class LatestRecipientIntentHandler(AbstractRequestHandler):
     handler_input.response_builder\
       .speak(speech_text)\
       .set_card(
-        StandardCard(name, speech_text, img))\
+        StandardCard(name, speech_text, Image(img, img)))\
       .set_should_end_session(False)
 
     session_attributes = handler_input.attributes_manager.session_attributes
@@ -153,7 +154,7 @@ class WomenAwardedIntentHandler(AbstractRequestHandler):
     handler_input.response_builder \
       .speak(speech_text) \
       .set_card(
-        StandardCard(name, speech_text, img))\
+        StandardCard(name, speech_text, Image(img, img)))\
       .set_should_end_session(False)
 
     session_attributes = handler_input.attributes_manager.session_attributes
@@ -182,7 +183,7 @@ class WhatIsItIntentHandler(AbstractRequestHandler):
     handler_input.response_builder\
       .speak(speech_text)\
       .set_card(
-        StandardCard('Medal of Honor Info', speech_text, img))\
+        StandardCard('Medal of Honor Info', speech_text, Image(img, img)))\
       .set_should_end_session(False)
 
     session_attributes = handler_input.attributes_manager.session_attributes
@@ -231,7 +232,7 @@ class RecipientIntentHandler(AbstractRequestHandler):
       handler_input.response_builder\
         .speak(speech_text)\
         .set_card(
-          StandardCard(name, speech_text, img))\
+          StandardCard(name, speech_text, Image(img, img)))\
         .set_should_end_session(False)
 
       session_attributes = handler_input.attributes_manager.session_attributes
@@ -270,7 +271,7 @@ class RandomRecipientIntentHandler(AbstractRequestHandler):
     handler_input.response_builder\
       .speak(speech_text)\
       .set_card(
-        StandardCard(name, speech_text, img))\
+        StandardCard(name, speech_text, Image(img, img)))\
       .set_should_end_session(False)
 
     session_attributes = handler_input.attributes_manager.session_attributes
