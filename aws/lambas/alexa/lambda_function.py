@@ -137,7 +137,7 @@ class WomenAwardedIntentHandler(AbstractRequestHandler):
   def handle(self, handler_input):
     # type: (HandlerInput) -> Response
 
-    women = ['Mary Edwards Walker']
+    women = ['Mary Walker']
     recipient = random.choice(women)
 
     # fetch data into dynamodb
