@@ -1,6 +1,7 @@
 import logging
-import datetime
+from datetime import datetime
 import random
+import string
 
 import boto3
 from boto3.dynamodb.conditions import Key
@@ -69,9 +70,8 @@ class LatestRecipientIntentHandler(AbstractRequestHandler):
     # fetch data into dynamodb
     logger.info('searching for latest recipent in dynamodb')
     table = boto3.resource('dynamodb').Table('MedalOfHonorInfo')
-    min_year = str(datetime.datetime.now().year - 5) # assume that the award will be given out at least every 5 years
-    # TODO response = table.scan(FilterExpression=Key('year_of_honor').gt(min_year))
-    response = table.scan(FilterExpression=Key('year_of_honor').gt('1969'))
+    min_year = str(datetime.now().year - 5) # assume that the award will be given out at least every 5 years
+    response = table.scan(FilterExpression=Key('year_of_honor').gt(min_year))
     print 'response={}'.format(response)
 
     # find recorded with greatest year_of_honor. there isn't much we can do about tie-breaking
@@ -107,7 +107,7 @@ class WomenAwardedIntentHandler(AbstractRequestHandler):
     # fetch data into dynamodb
     logger.info('searching for latest recipent in dynamodb')
     table = boto3.resource('dynamodb').Table('MedalOfHonorInfo')
-    min_year = str(datetime.datetime.now().year - 5) # assume that the award will be given out at least every 5 years
+    min_year = str(datetime.now().year - 5) # assume that the award will be given out at least every 5 years
     # TODO response = table.scan(FilterExpression=Key('year_of_honor').gt(min_year))
     response = table.scan(FilterExpression=Key('year_of_honor').gt('1969'))
     print 'response={}'.format(response)
@@ -183,10 +183,44 @@ class RecipientIntentHandler(AbstractRequestHandler):
         .speak(speech_text)\
         .set_card(
           # TODO StandardCard(name, speech_text, img))\
-          SimpleCard(name, speech_text)) \
+          SimpleCard(name, speech_text))\
         .set_should_end_session(False)
 
     return handler_input.response_builder.response
+
+
+class RandomRecipientIntentHandler(AbstractRequestHandler):
+  """Handler for Recipient Intent"""
+  def can_handle(self, handler_input):
+    # type: (HandlerInput) -> bool
+    return is_intent_name("RandomRecipient")(handler_input)
+
+  def handle(self, handler_input):
+    # type: (HandlerInput) -> Response
+
+    # fetch data into dynamodb
+    logger.info('searching for a recipent in dynamodb')
+    table = boto3.resource('dynamodb').Table('MedalOfHonorInfo')
+    random_name = ''.join([random.choice(string.ascii_uppercase) for i in range(1,20)]).title()
+    # response = table.scan(Limit=1, ExclusiveStartKey={'name': {'S':random_name}})
+    response = table.scan(Limit=1, ExclusiveStartKey={'name': random_name, 'year_of_honor': str(random.choice(range(1800, datetime.now().year)))})
+
+    print 'response={}'.format(response)
+
+    citation = response['Items'][0]['citation']
+    # year_of_honor = response['Items'][0]['year_of_honor']
+    img = response['Items'][0]['img']
+    name = response['Items'][0]['name']
+    speech_text = citation
+    handler_input.response_builder\
+      .speak(speech_text)\
+      .set_card(
+        # SimpleCard(name, speech_text))\
+        StandardCard(name, speech_text, img))\
+      .set_should_end_session(False)
+
+    return handler_input.response_builder.response
+
 
 class HelpIntentHandler(AbstractRequestHandler):
   """Handler for Help Intent"""
@@ -273,6 +307,7 @@ sb.add_request_handler(LatestRecipientIntentHandler())
 sb.add_request_handler(WomenAwardedIntentHandler())
 sb.add_request_handler(WhatIsItIntentHandler())
 sb.add_request_handler(RecipientIntentHandler())
+sb.add_request_handler(RandomRecipientIntentHandler())
 sb.add_request_handler(HelpIntentHandler())
 sb.add_request_handler(CancelOrStopIntentHandler())
 sb.add_request_handler(FallbackIntentHandler())
