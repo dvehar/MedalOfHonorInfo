@@ -31,6 +31,11 @@ class LaunchRequestHandler(AbstractRequestHandler):
     # type: (HandlerInput) -> Response
     speech_text = 'This skill can give you more information about the Medal of Honor and its recipients. Try saying "Alexa, ask Medal of Honor Info what is the Medal of Honor?"'
 
+    session_attributes = handler_input.attributes_manager.session_attributes
+    session_attributes['last_request'] = {
+      'speech_text': speech_text
+    }
+
     handler_input.response_builder\
       .speak(speech_text)\
       .set_card(
@@ -43,18 +48,41 @@ class RepeatIntentHandler(AbstractRequestHandler):
   """Handler for Repeat Intent"""
   def can_handle(self, handler_input):
     # type: (HandlerInput) -> bool
-    return is_request_type("RepeatIntent")(handler_input)
+    return is_intent_name("AMAZON.RepeatIntent")(handler_input)
 
   def handle(self, handler_input):
     # type: (HandlerInput) -> Response
-    #TODO: https://developer.amazon.com/blogs/alexa/post/2279543b-ed7b-48b4-a3aa-d273f7aab609/alexa-skill-recipe-using-session-attributes-to-enable-repeat-responses
-    speech_text = 'This skill can give you more information about the Medal of Honor and its recipients. Try saying "Alexa, ask Medal of Honor Info what is the Medal of Honor?"'
+    session_attributes = handler_input.attributes_manager.session_attributes
+    logger.info("session_attributes={}".format(session_attributes))
 
-    handler_input.response_builder\
-      .speak(speech_text)\
-      .set_card(
-        SimpleCard("Medal of Honor Info", speech_text))\
-          .set_should_end_session(False)
+    if 'last_request' in session_attributes:
+      last_request = session_attributes['last_request']
+
+      handler_input.response_builder\
+        .set_should_end_session(False)
+
+      if 'citation' in last_request:
+        handler_input.response_builder\
+          .speak(last_request['citation'])
+      elif 'speech_text' in last_request:
+        handler_input.response_builder\
+          .speak(last_request['speech_text'])
+      else:
+        logger.error('unhandled last_request in RepeatIntentHandler: {}'.format(last_request))
+        speech_text = 'I\'m not sure what you want me to repeat. Try saying "Alexa, ask Medal of Honor Info what is the Medal of Honor?"'
+        handler_input.response_builder\
+          .speak(speech_text)\
+          .set_card(
+            SimpleCard("Medal of Honor Info", speech_text))\
+          .set_should_end_session(True)
+    else:
+      speech_text = 'I\'m not sure what you want me to repeat. Try saying "Alexa, ask Medal of Honor Info what is the Medal of Honor?"'
+      handler_input.response_builder\
+        .speak(speech_text)\
+        .set_card(
+          SimpleCard("Medal of Honor Info", speech_text))\
+        .set_should_end_session(True)
+
     return handler_input.response_builder.response
 
 
@@ -86,9 +114,15 @@ class LatestRecipientIntentHandler(AbstractRequestHandler):
     handler_input.response_builder\
       .speak(speech_text)\
       .set_card(
-        # TODO StandardCard(name, speech_text, img))\
-        SimpleCard(name, speech_text))\
-          .set_should_end_session(False)
+        StandardCard(name, speech_text, img))\
+      .set_should_end_session(False)
+
+    session_attributes = handler_input.attributes_manager.session_attributes
+    session_attributes['last_request'] = {
+      'name': name,
+      'citation': citation,
+      'img': img
+    }
 
     return handler_input.response_builder.response
 
@@ -122,6 +156,13 @@ class WomenAwardedIntentHandler(AbstractRequestHandler):
         StandardCard(name, speech_text, img))\
       .set_should_end_session(False)
 
+    session_attributes = handler_input.attributes_manager.session_attributes
+    session_attributes['last_request'] = {
+      'name': name,
+      'citation': citation,
+      'img': img
+    }
+
     return handler_input.response_builder.response
 
 class WhatIsItIntentHandler(AbstractRequestHandler):
@@ -143,6 +184,13 @@ class WhatIsItIntentHandler(AbstractRequestHandler):
       .set_card(
         StandardCard('Medal of Honor Info', speech_text, img))\
       .set_should_end_session(False)
+
+    session_attributes = handler_input.attributes_manager.session_attributes
+    session_attributes['last_request'] = {
+      'speech_text': speech_text,
+      'img': img
+    }
+
     return handler_input.response_builder.response
 
 class RecipientIntentHandler(AbstractRequestHandler):
@@ -167,6 +215,11 @@ class RecipientIntentHandler(AbstractRequestHandler):
     if len(response['Items']) == 0:
       speech_text = 'There are no Medal of Honor recipients by the name of {}'.format(recipient)
       handler_input.response_builder.speak(speech_text)
+
+      session_attributes = handler_input.attributes_manager.session_attributes
+      session_attributes['last_request'] = {
+        'speech_text': speech_text
+      }
     else:
       citation = response['Items'][0]['citation']
       # year_of_honor = response['Items'][0]['year_of_honor']
@@ -176,9 +229,15 @@ class RecipientIntentHandler(AbstractRequestHandler):
       handler_input.response_builder\
         .speak(speech_text)\
         .set_card(
-          # TODO StandardCard(name, speech_text, img))\
-          SimpleCard(name, speech_text))\
+          StandardCard(name, speech_text, img))\
         .set_should_end_session(False)
+
+      session_attributes = handler_input.attributes_manager.session_attributes
+      session_attributes['last_request'] = {
+        'name': name,
+        'citation': citation,
+        'img': img
+      }
 
     return handler_input.response_builder.response
 
@@ -196,8 +255,8 @@ class RandomRecipientIntentHandler(AbstractRequestHandler):
     logger.info('searching for a recipent in dynamodb')
     table = boto3.resource('dynamodb').Table('MedalOfHonorInfo')
     random_name = ''.join([random.choice(string.ascii_uppercase) for i in range(1,20)]).title()
-    # response = table.scan(Limit=1, ExclusiveStartKey={'name': {'S':random_name}})
-    response = table.scan(Limit=1, ExclusiveStartKey={'name': random_name, 'year_of_honor': str(random.choice(range(1800, datetime.now().year)))})
+    random_year = str(random.choice(range(1800, datetime.now().year)))
+    response = table.scan(Limit=1, ExclusiveStartKey={'name': random_name, 'year_of_honor': random_year})
 
     print 'response={}'.format(response)
 
@@ -209,9 +268,15 @@ class RandomRecipientIntentHandler(AbstractRequestHandler):
     handler_input.response_builder\
       .speak(speech_text)\
       .set_card(
-        # SimpleCard(name, speech_text))\
         StandardCard(name, speech_text, img))\
       .set_should_end_session(False)
+
+    session_attributes = handler_input.attributes_manager.session_attributes
+    session_attributes['last_request'] = {
+      'name': name,
+      'citation': citation,
+      'img': img
+    }
 
     return handler_input.response_builder.response
 
@@ -226,9 +291,17 @@ class HelpIntentHandler(AbstractRequestHandler):
     # type: (HandlerInput) -> Response
     speech_text = 'This skill can give you more information about the Medal of Honor and its recipients. Try saying "Alexa, ask Medal of Honor Info what is the Medal of Honor?"'
 
-    handler_input.response_builder.speak(speech_text).ask(
-      speech_text).set_card(SimpleCard(
-      "Medal of Honor Info", speech_text))
+    handler_input.response_builder\
+      .speak(speech_text)\
+      .ask(speech_text)\
+      .set_card(
+        SimpleCard("Medal of Honor Info", speech_text))
+
+    session_attributes = handler_input.attributes_manager.session_attributes
+    session_attributes['last_request'] = {
+      'speech_text': speech_text
+    }
+
     return handler_input.response_builder.response
 
 
@@ -262,7 +335,9 @@ class FallbackIntentHandler(AbstractRequestHandler):
       'Sorry I can\'t help you with that.  '
       'Try saying "Alexa, ask Medal of Honor Info about a random recipient"')
     reprompt = 'Try saying "Alexa, ask Medal of Honor Info about a random recipient"'
-    handler_input.response_builder.speak(speech_text).ask(reprompt)
+    handler_input.response_builder\
+      .speak(speech_text)\
+      .ask(reprompt)
     return handler_input.response_builder.response
 
 

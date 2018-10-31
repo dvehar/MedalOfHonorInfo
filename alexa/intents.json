@@ -120,34 +120,6 @@
             "random recipient",
             "about a random recipient"
           ]
-        },
-        {
-          "name": "RandomWarRecipient",
-          "slots": [
-            {
-              "name": "war",
-              "type": "AMAZON.EventType",
-              "samples": [
-                "Indian Wars",
-                "The War To End All War",
-                "The War To End All Wars",
-                "World War One",
-                "World War Two",
-                "Korea",
-                "Korean War",
-                "The Korean War",
-                "Vietnam",
-                "Vietnam War",
-                "The Vietnam War"
-              ]
-            }
-          ],
-          "samples": [
-            "about a random recipient from {war}",
-            "about a random awardee from {war}",
-            "about a recipient from {war}",
-            "about a awardee from {war}"
-          ]
         }
       ],
       "types": [
