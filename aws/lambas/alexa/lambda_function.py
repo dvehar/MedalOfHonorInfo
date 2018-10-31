@@ -102,19 +102,14 @@ class WomenAwardedIntentHandler(AbstractRequestHandler):
   def handle(self, handler_input):
     # type: (HandlerInput) -> Response
 
-    # todo: need to think more about how to do this
+    women = ['Mary Edwards Walker']
+    recipient = random.choice(women)
 
     # fetch data into dynamodb
-    logger.info('searching for latest recipent in dynamodb')
+    logger.info('searching for the woman {}'.format(recipient))
     table = boto3.resource('dynamodb').Table('MedalOfHonorInfo')
-    min_year = str(datetime.now().year - 5) # assume that the award will be given out at least every 5 years
-    # TODO response = table.scan(FilterExpression=Key('year_of_honor').gt(min_year))
-    response = table.scan(FilterExpression=Key('year_of_honor').gt('1969'))
+    response = table.query(KeyConditionExpression=Key('name').eq(recipient), Limit=1)
     print 'response={}'.format(response)
-
-    # find recorded with greatest year_of_honor. there isn't much we can do about tie-breaking
-    newest = max(response['Items'], key=lambda val: val['year_of_honor'])
-    print 'newest={}'.format(newest)
 
     citation = response['Items'][0]['citation']
     # year_of_honor = response['Items'][0]['year_of_honor']
@@ -124,8 +119,7 @@ class WomenAwardedIntentHandler(AbstractRequestHandler):
     handler_input.response_builder \
       .speak(speech_text) \
       .set_card(
-      # TODO StandardCard(name, speech_text, img))\
-      SimpleCard(name, speech_text)) \
+        StandardCard(name, speech_text, img))\
       .set_should_end_session(False)
 
     return handler_input.response_builder.response
@@ -148,7 +142,7 @@ class WhatIsItIntentHandler(AbstractRequestHandler):
       .speak(speech_text)\
       .set_card(
         StandardCard('Medal of Honor Info', speech_text, img))\
-          .set_should_end_session(False)
+      .set_should_end_session(False)
     return handler_input.response_builder.response
 
 class RecipientIntentHandler(AbstractRequestHandler):
