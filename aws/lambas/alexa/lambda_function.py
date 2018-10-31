@@ -203,8 +203,10 @@ class RecipientIntentHandler(AbstractRequestHandler):
     # type: (HandlerInput) -> Response
 
     slots = handler_input.request_envelope.request.intent.slots
-    recipient = slots['recipient'].value
-    recipient = recipient.title()
+    try:
+      recipient = slots['recipient'].resolutions.resolutions_per_authority[0].values[0].value.name.title()
+    except:
+      recipient = slots['recipient'].value.title()
 
     # fetch data into dynamodb
     print 'searching for {} in dynamodb'.format(recipient)
