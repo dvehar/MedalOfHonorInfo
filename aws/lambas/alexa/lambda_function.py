@@ -44,7 +44,6 @@ class LaunchRequestHandler(AbstractRequestHandler):
           .set_should_end_session(False)
     return handler_input.response_builder.response
 
-
 class RepeatIntentHandler(AbstractRequestHandler):
   """Handler for Repeat Intent"""
   def can_handle(self, handler_input):
@@ -86,7 +85,6 @@ class RepeatIntentHandler(AbstractRequestHandler):
 
     return handler_input.response_builder.response
 
-
 class LatestRecipientIntentHandler(AbstractRequestHandler):
   """Handler for Latest Recipient Intent"""
   def can_handle(self, handler_input):
@@ -108,12 +106,12 @@ class LatestRecipientIntentHandler(AbstractRequestHandler):
     print 'newest={}'.format(newest)
 
     citation = response['Items'][0]['citation']
-    # year_of_honor = response['Items'][0]['year_of_honor']
+    year_of_honor = response['Items'][0]['year_of_honor']
     img = response['Items'][0]['img']
     name = response['Items'][0]['name']
     speech_text = citation
     handler_input.response_builder\
-      .speak(speech_text)\
+      .speak('{} was awarded the Medal of Honor in {}<break time="600ms"/>{}'.format(name, year_of_honor, speech_text))\
       .set_card(
         StandardCard(name, speech_text, Image(img, img)))\
       .set_should_end_session(False)
@@ -126,7 +124,6 @@ class LatestRecipientIntentHandler(AbstractRequestHandler):
     }
 
     return handler_input.response_builder.response
-
 
 class WomenAwardedIntentHandler(AbstractRequestHandler):
   """Handler for Women Awarded Intent"""
@@ -147,12 +144,12 @@ class WomenAwardedIntentHandler(AbstractRequestHandler):
     print 'response={}'.format(response)
 
     citation = response['Items'][0]['citation']
-    # year_of_honor = response['Items'][0]['year_of_honor']
+    year_of_honor = response['Items'][0]['year_of_honor']
     img = response['Items'][0]['img']
     name = response['Items'][0]['name']
     speech_text = citation
-    handler_input.response_builder \
-      .speak(speech_text) \
+    handler_input.response_builder\
+      .speak('{} was awarded the Medal of Honor in {}<break time="600ms"/>{}'.format(name, year_of_honor, speech_text))\
       .set_card(
         StandardCard(name, speech_text, Image(img, img)))\
       .set_should_end_session(False)
@@ -225,12 +222,12 @@ class RecipientIntentHandler(AbstractRequestHandler):
       }
     else:
       citation = response['Items'][0]['citation']
-      # year_of_honor = response['Items'][0]['year_of_honor']
+      year_of_honor = response['Items'][0]['year_of_honor']
       img = response['Items'][0]['img']
       name = response['Items'][0]['name']
       speech_text = citation
       handler_input.response_builder\
-        .speak(speech_text)\
+        .speak('{} was awarded the Medal of Honor in {}<break time="600ms"/>{}'.format(name, year_of_honor, speech_text))\
         .set_card(
           StandardCard(name, speech_text, Image(img, img)))\
         .set_should_end_session(False)
@@ -244,7 +241,6 @@ class RecipientIntentHandler(AbstractRequestHandler):
 
     return handler_input.response_builder.response
 
-
 class RandomRecipientIntentHandler(AbstractRequestHandler):
   """Handler for Recipient Intent"""
   def can_handle(self, handler_input):
@@ -255,7 +251,7 @@ class RandomRecipientIntentHandler(AbstractRequestHandler):
     # type: (HandlerInput) -> Response
 
     # fetch data into dynamodb
-    logger.info('searching for a recipent in dynamodb')
+    logger.info('searching for a recipient in dynamodb')
     table = boto3.resource('dynamodb').Table('MedalOfHonorInfo')
     random_name = ''.join([random.choice(string.ascii_uppercase) for i in range(1,20)]).title()
     random_year = str(random.choice(range(1800, datetime.now().year)))
@@ -264,12 +260,12 @@ class RandomRecipientIntentHandler(AbstractRequestHandler):
     print 'response={}'.format(response)
 
     citation = response['Items'][0]['citation']
-    # year_of_honor = response['Items'][0]['year_of_honor']
+    year_of_honor = response['Items'][0]['year_of_honor']
     img = response['Items'][0]['img']
     name = response['Items'][0]['name']
     speech_text = citation
     handler_input.response_builder\
-      .speak(speech_text)\
+      .speak('{} was awarded the Medal of Honor in {}<break time="600ms"/>{}'.format(name, year_of_honor, speech_text)) \
       .set_card(
         StandardCard(name, speech_text, Image(img, img)))\
       .set_should_end_session(False)
@@ -282,7 +278,6 @@ class RandomRecipientIntentHandler(AbstractRequestHandler):
     }
 
     return handler_input.response_builder.response
-
 
 class HelpIntentHandler(AbstractRequestHandler):
   """Handler for Help Intent"""
@@ -307,7 +302,6 @@ class HelpIntentHandler(AbstractRequestHandler):
 
     return handler_input.response_builder.response
 
-
 class CancelOrStopIntentHandler(AbstractRequestHandler):
   """Single handler for Cancel and Stop Intent"""
   def can_handle(self, handler_input):
@@ -321,7 +315,6 @@ class CancelOrStopIntentHandler(AbstractRequestHandler):
 
     handler_input.response_builder.speak(speech_text)
     return handler_input.response_builder.response
-
 
 class FallbackIntentHandler(AbstractRequestHandler):
   """AMAZON.FallbackIntent is only available in en-US locale.
@@ -343,7 +336,6 @@ class FallbackIntentHandler(AbstractRequestHandler):
       .ask(reprompt)
     return handler_input.response_builder.response
 
-
 class SessionEndedRequestHandler(AbstractRequestHandler):
   """Handler for Session End."""
   def can_handle(self, handler_input):
@@ -353,7 +345,6 @@ class SessionEndedRequestHandler(AbstractRequestHandler):
   def handle(self, handler_input):
     # type: (HandlerInput) -> Response
     return handler_input.response_builder.response
-
 
 class CatchAllExceptionHandler(AbstractExceptionHandler):
   """Catch all exception handler, log exception and
